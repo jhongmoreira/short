@@ -31,9 +31,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Dependências de sistema do Chromium para os testes de navegação (Pest 4 + Playwright)
+RUN npx -y playwright@1.65.1 install-deps chromium \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /var/www/html
 
-EXPOSE 8000 5173
 
 # Cria um usuário com o mesmo UID/GID padrão do WSL2 (1000)
 RUN groupadd -g 1000 laravel \
@@ -42,3 +45,6 @@ RUN groupadd -g 1000 laravel \
 USER laravel
 
 EXPOSE 8000 5173
+
+# Navegador usado pelos testes de navegação
+RUN npx -y playwright@1.65.1 install chromium

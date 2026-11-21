@@ -1,59 +1,130 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Short
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Encurtador de URLs **sem cadastro**, feito em Laravel 12. O visitante cola uma URL, clica em **Encurtar** e recebe um link curto (ex.: `https://short.dominio.com/aB3xYz`) ou um código próprio (ex.: `/meu-link-1-compartilhado`).
 
-## About Laravel
+Cada link recebe um **PIN de gerenciamento**, exibido **uma única vez**. Com o código + PIN, qualquer pessoa que tenha criado o link consegue voltar e consultar os dados dele, sem precisar de login.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Objetivos
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Encurtar URLs em um clique, numa interface mínima e responsiva (tema escuro com destaque laranja).
+- Permitir códigos personalizados.
+- Dar acesso às informações do link via PIN, sem cadastro.
+- Registrar cada acesso (data/hora, sistema, navegador e tipo de dispositivo).
+- Rodar em **subdomínios de hospedagens compartilhadas**, sem precisar de serviços extras (banco SQLite, sem filas obrigatórias).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Stack
 
-## Learning Laravel
+| Camada | Tecnologia |
+| --- | --- |
+| Backend | PHP 8.2+ · Laravel 12 |
+| Banco | SQLite |
+| Front-end | Blade · Tailwind CSS 4 · Vite · JavaScript puro |
+| Testes | Pest 4 (unitários, feature e navegação com Playwright) |
+| Análise estática | Larastan (PHPStan) nível 6 · Laravel Pint |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Funcionalidades (etapa 01)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Tela inicial**: input centralizado (apenas linha inferior) + botão laranja **Encurtar** com animação de carregamento.
+- **Validação no front e no backend**: só aceita `http`/`https` com domínio válido. Sem protocolo, adiciona `https://`.
+- **Código personalizado** (opcional, em "Personalizar link"): letras minúsculas, números e hífens, de 3 a 50 caracteres. Palavras reservadas do sistema são bloqueadas.
+- **Tela do link** (`/gerenciar/{codigo}`): data/hora de criação, URL original, URL encurtada (com botão copiar), total de acessos e o **PIN** (somente logo após a criação).
+- **Acesso com PIN** (`/gerenciar`): código (ou URL curta) + PIN, com limite de tentativas por minuto.
+- **Redirecionamento** (`/{codigo}`): HTTP 302 para a URL original, registrando o acesso em `visualizations`.
 
-## Laravel Sponsors
+## Decisões de segurança
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- O PIN **não é salvo em texto puro**: guardamos um HMAC-SHA256 dele com a `APP_KEY`. Isso mantém o índice único e a busca, mas um vazamento do banco não expõe os PINs. **Trocar a `APP_KEY` invalida todos os PINs.**
+- PIN de 8 caracteres sem símbolos ambíguos (`0/O`, `1/I/L`). Não diferencia maiúsculas.
+- Limite de requisições por IP: 20 links/min e 5 tentativas de PIN/min (configurável em `config/short.php`).
+- Códigos gerados (base62, 6 caracteres) diferenciam maiúsculas. Os personalizados são salvos em minúsculas.
 
-### Premium Partners
+## Banco de dados
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```
+urls
+├── url_id          PK
+├── original_link   text
+├── short_url       unique (código curto)
+├── pin_manager     unique (HMAC do PIN)
+└── created_at · updated_at · deleted_at
 
-## Contributing
+visualizations
+├── visualization_id  PK
+├── url_id            FK → urls.url_id (cascade)
+├── access_date_hour  datetime (indexado)
+├── device_info       json {os, browser, device}
+└── created_at · updated_at · deleted_at
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+A mesma `original_link` pode existir várias vezes. Cada registro tem um código e um PIN próprios.
 
-## Code of Conduct
+## Estrutura
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```
+app/
+├── Http/Controllers/
+│   ├── ShortUrlController.php   # tela inicial e criação
+│   ├── ManageController.php     # acesso por PIN e tela do link
+│   └── RedirectController.php   # /{codigo} → URL original
+├── Http/Requests/               # validação (StoreShortUrl, UnlockShortUrl)
+├── Models/                      # ShortUrl (tabela urls), Visualization
+└── Services/
+    ├── ShortUrlCreator.php      # cria link + PIN, trata colisões
+    ├── ShortCodeGenerator.php   # código base62 / palavras reservadas
+    ├── PinManager.php           # gera, faz hash e confere o PIN
+    ├── ManagedUrls.php          # links desbloqueados na sessão
+    └── UserAgentParser.php      # sistema, navegador e dispositivo
+config/short.php                 # tamanhos, alfabetos, limites, reservados
+resources/views/                 # layout, home, manage/{unlock,show}
+resources/js/app.js              # validação, loading, copiar
+tests/{Unit,Feature,Browser}/    # Pest 4
+.agents/docs/                    # especificações por etapa
+```
 
-## Security Vulnerabilities
+## Rodando localmente
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate
+composer run dev          # servidor + Vite + logs
+```
 
-## License
+Com Docker: `docker compose up --build` (a aplicação fica em `http://localhost:8000`).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Testes e qualidade
+
+```bash
+composer test             # unitários + feature
+composer test:browser     # navegação (Playwright/Chromium)
+composer analyse          # Larastan nível 6
+./vendor/bin/pint         # padronização de código
+```
+
+Os testes de navegação precisam do Chromium do Playwright:
+
+```bash
+npx playwright install chromium
+sudo npx playwright install-deps chromium   # bibliotecas do sistema (Linux/WSL)
+```
+
+A imagem Docker já traz as duas coisas.
+
+## Deploy em hospedagem compartilhada (subdomínio)
+
+1. Localmente, rode `composer install --no-dev --optimize-autoloader` e `npm run build`.
+2. Envie o projeto (incluindo `vendor/` e `public/build/`) para uma pasta, ex.: `/public_html/short`.
+3. No painel, crie o subdomínio apontando para:
+   - **`/public_html/short/public`** (recomendado), ou
+   - `/public_html/short`: o `.htaccess` da raiz encaminha tudo para `public/` e bloqueia o resto.
+4. Configure o `.env` (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://short.seudominio.com`, `APP_KEY`).
+5. Crie `database/database.sqlite`, garanta permissão de escrita nele, em `database/` e em `storage/`, e rode `php artisan migrate --force`.
+
+## Roadmap
+
+- [x] 00 · Estrutura do projeto
+- [x] 01 · Tela inicial, criação do link, PIN e redirecionamento
+- [ ] Detalhamento das informações de acesso na tela do link

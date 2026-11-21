@@ -1,0 +1,22 @@
+# Usado quando o document root do (sub)domínio aponta para a raiz do
+# projeto (ex.: /public_html/short) em vez de /public_html/short/public.
+# Todas as requisições são encaminhadas para public/, mantendo .env,
+# vendor, database etc. inacessíveis pela web.
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Fallback caso mod_rewrite não esteja disponível
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
