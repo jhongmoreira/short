@@ -1,0 +1,13 @@
+#01-Tela inicial do Projeto
+A tela inicial do projeto será composta apenas por um input que ficara centralizado no meio da tela (verticalmente e horizontalmente).
+Na frente do input haverá um botão laranja escrito encurtar. Ao clicar neste botão será feito uma animação no mesmo de carregando. 
+A plataforma deverá verificar tanto pelo front, quanto pelo backend, que se trata de uma URL válida.
+Caso seja, deverá salvar a URL no banco de dados, na tabela urls, gerando a url encurtada e o PIN de gerenciamento, redirecionando
+o usuário para uma tela com as informações básicas da URL:
+- Data e hora de geração
+- URL
+- URL encurtada
+- PIN de gerenciamento (aparece somente uma vez, informar ao usuário que é necessário copiar ou perderá acesso)
+
+Nesta mesma tela, em outra etapa, será detalhado as informações de acesso. 
+
