@@ -1,4 +1,4 @@
-#01-Tela inicial do Projeto
+# 01-Tela inicial do Projeto
 A tela inicial do projeto será composta apenas por um input que ficara centralizado no meio da tela (verticalmente e horizontalmente).
 Na frente do input haverá um botão laranja escrito encurtar. Ao clicar neste botão será feito uma animação no mesmo de carregando. 
 A plataforma deverá verificar tanto pelo front, quanto pelo backend, que se trata de uma URL válida.
