@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
@@ -8,4 +7,53 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Tema escuro único com destaque em laranja suave */
+    --color-ink: #0f0f11;
+    --color-surface: #17171b;
+    --color-line: #2c2c33;
+    --color-muted: #8b8b96;
+    --color-fg: #e8e8ec;
+    --color-accent: #f4a261;
+    --color-accent-strong: #ee8d43;
+    --color-accent-soft: rgb(244 162 97 / 0.12);
+    --color-danger: #f28b82;
+}
+
+@layer base {
+    html {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply bg-ink text-fg font-sans antialiased;
+    }
+
+    ::selection {
+        @apply bg-accent text-ink;
+    }
+}
+
+@layer components {
+    /* Input apenas com linha inferior */
+    .field-line {
+        @apply w-full border-0 border-b-2 border-line bg-transparent px-1 py-3 text-lg text-fg placeholder:text-muted/70
+            outline-none transition-colors duration-200 focus:border-accent;
+    }
+
+    .field-line[aria-invalid='true'] {
+        @apply border-danger;
+    }
+
+    .btn-accent {
+        @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3 font-semibold text-ink
+            transition hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2
+            focus-visible:outline-accent disabled:cursor-wait disabled:opacity-80;
+    }
+
+    .btn-ghost {
+        @apply inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-muted
+            transition hover:border-accent hover:text-accent;
+    }
 }
