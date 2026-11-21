@@ -115,8 +115,8 @@ A imagem Docker já traz as duas coisas.
 
 ## Deploy em hospedagem compartilhada (subdomínio)
 
-1. Localmente, rode `composer install --no-dev --optimize-autoloader` e `npm run build`.
-2. Envie o projeto (incluindo `vendor/` e `public/build/`) para uma pasta, ex.: `/public_html/short`.
+1. Os assets compilados (`public/build/`) são versionados: **rode `npm run build` e commite antes de cada deploy** sempre que mudar CSS/JS/Blade.
+2. Clone/atualize o repositório no servidor em uma pasta, ex.: `/public_html/short`, e rode `composer install --no-dev --optimize-autoloader` lá.
 3. No painel, crie o subdomínio apontando para:
    - **`/public_html/short/public`** (recomendado), ou
    - `/public_html/short`: o `.htaccess` da raiz encaminha tudo para `public/` e bloqueia o resto.
