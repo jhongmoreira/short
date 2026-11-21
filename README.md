@@ -116,12 +116,13 @@ A imagem Docker já traz as duas coisas.
 ## Deploy em hospedagem compartilhada (subdomínio)
 
 1. Os assets compilados (`public/build/`) são versionados: **rode `npm run build` e commite antes de cada deploy** sempre que mudar CSS/JS/Blade.
-2. Clone/atualize o repositório no servidor em uma pasta, ex.: `/public_html/short`, e rode `composer install --no-dev --optimize-autoloader` lá.
+2. Clone/atualize o repositório no servidor em uma pasta, ex.: `/public_html/short`.
 3. No painel, crie o subdomínio apontando para:
    - **`/public_html/short/public`** (recomendado), ou
    - `/public_html/short`: o `.htaccess` da raiz encaminha tudo para `public/` e bloqueia o resto.
-4. Configure o `.env` (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://short.seudominio.com`, `APP_KEY`).
-5. Crie `database/database.sqlite`, garanta permissão de escrita nele, em `database/` e em `storage/`, e rode `php artisan migrate --force`.
+4. O PHP do site é definido pelo `AddHandler application/x-httpd-ea-php84` em `public/.htaccess`. No SSH o `php` padrão é 8.2, então rode o Composer com `/opt/cpanel/ea-php84/root/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader`.
+5. Configure o `.env` (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://short.seudominio.com`, `APP_KEY`).
+6. Crie `database/database.sqlite`, garanta permissão de escrita nele, em `database/` e em `storage/`, e rode `/opt/cpanel/ea-php84/root/usr/bin/php artisan migrate --force`.
 
 ## Roadmap
 
